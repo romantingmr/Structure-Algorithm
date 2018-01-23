@@ -26,57 +26,20 @@ class Index
     }
     public function index()
     {
-        $url = "http://www.imabo.net/?";
-        $url .= (strpos($url ,"?") == false) ? '?mb_open_new_controller=1' : '&mb_open_new_controller=1';
-
-        echo (microtime(TRUE));
-        $path = "var/www/caifu/apps/landingpage/Lib/Model/VipWeiBoCommon818";
-        //Config::load(APP_PATH.'config/config.php');
-        echo Config::get('database.type');
-        echo Config::get('app_namespace');
-        $data = [
-            9916=>['total'=>10.1,'name'=>'佛自在'],
-            3424=>['total'=>10.2,'name'=>'佛自在2'],
-            3423=>['total'=>10,'name'=>'佛自在3'],
-        ];
-        uasort($data,array($this,'mySort'));
-        $diffTime = strtotime('+1 day', strtotime(date('Ymd')))-time();
-        $demo = new \my\Test();
-        $data = $demo->index();
-        $demo2 = new \wechatsdk\wechat();
-        $data2 = $demo2->index();
-        Loader::import('wechatsdk.wechatv2',EXTEND_PATH,'.class.php');
-        $demo3 = new wechatv2();
-        $data3 = $demo3->index();
-        $data = ['name'=>'tp5','url'=>'thinkphp.com'];
-
-        return ['data'=>$data3,'code'=>0,'message'=>'操作完成','extra'=>Config::get('database.hostname'),'env'=>ENV::get('type'),'url'=>$url];
-        //return $data.'<style type="text/css">*{ padding: 0; margin: 0; } .think_default_text{ padding: 4px 48px;} a{color:#2E5CD5;cursor: pointer;text-decoration: none} a:hover{text-decoration:underline; } body{ background: #fff; font-family: "Century Gothic","Microsoft yahei"; color: #333;font-size:18px} h1{ font-size: 100px; font-weight: normal; margin-bottom: 12px; } p{ line-height: 1.6em; font-size: 42px }</style><div style="padding: 24px 48px;"> <h1>:)</h1><p> ThinkPHP V5<br/><span style="font-size:30px">十年磨一剑 - 为API开发设计的高性能框架</span></p><span style="font-size:22px;">[ V5.0 版本由 <a href="http://www.qiniu.com" target="qiniu">七牛云</a> 独家赞助发布 ]</span></div><script type="text/javascript" src="http://tajs.qq.com/stats?sId=9347272" charset="UTF-8"></script><script type="text/javascript" src="http://ad.topthink.com/Public/static/client.js"></script><thinkad id="ad_bd568ce7058a1091"></thinkad>';
+        
     }
 
     private function mySort($a,$b)
     {
-        if($a['total'] ==  $b['total']) return 0;
-        return $a['total'] > $b['total'] ? -1 : 1;
-    }
 
     public function used($uid)
     {
-        $whiteUser = [4422280];
-        echo $uid;
-        if(!in_array($uid,$whiteUser)) {//by Bande
-            return 1;
-        }
+       
     }
 
     public function read()
     {
-        $data = [
-            'TSLA',
-            'AAPL',
-            'AAP',
-        ];
-        echo json_encode($data);
+        
     }
 
     public function amqp()
@@ -202,27 +165,27 @@ class Index
         );
 
         if (!$config) throw new Exception('Cache config NULL');
-        $maxValue = pow(2,4);
+        $maxValue = pow(2,10);
         foreach ($config as $key => $value) {
             for ($i = 0; $i < $maxValue; $i++) {
                 $node[sprintf("%u", crc32($value . '_' . $i))] = $value . '_' . $i;
             }
         }
         ksort($node);
-        print_r($node);
+        //print_r($node);
         //建立可以进行二分法查找的数组
         $j=0;
         foreach($node as $key=>$value){
             $newKeyNode[$j++] = $key;
         }
-        print_r($newKeyNode);
+        //print_r($newKeyNode);
         //传入参与值
         for($k=0;$k<2;$k++) {
-            $mcKey = 'ts_imb_userInfo_429823_'.$k;
+            $mcKey = 'ts_imb_userInfo_'.$k;
             $hashValue = sprintf('%u', crc32($mcKey));
             echo $hashValue."\n";
             //mc环形分布
-            $index = $this->dichotomySearch($hashValue, $newKeyNode);
+            $index = $this->searchSectionMaxValue($hashValue, $newKeyNode);
             echo $index."\n";
             //echo $node[$newKeyNode[$index]]."\n";
         }
@@ -239,9 +202,6 @@ class Index
         $mcKey = 'ts_imb_userInfo_429823';
         $hashValue = sprintf('%u' ,crc32($mcKey));
         echo $this->dichotomySearch(20 ,$arr);
-        //echo $this->searchBinary($arr ,49 ,0,0);
-
-
     }
 
     //while循环二分法查找
@@ -264,7 +224,7 @@ class Index
                 $low = $mid+1;
             }
         }
-        return -1;
+        return false;
     }
 
     //递归二分法查找
@@ -283,6 +243,83 @@ class Index
                 return  $this->searchBinary($arr , $search ,$low ,$mid-1);
             }
         }
+    }
+
+    /**
+     * @name 二分法查找最靠近区间
+     * @param $search
+     * @param $arr
+     * @return bool|int
+     */
+    public function searchSectionMaxValue($search,$arr)
+    {
+        $high = count($arr)-1;//最大key值
+        $low = 0;
+        if($search >= $arr[$high])
+            return $high;
+        if($search == $arr[$low])
+            return $low;
+        while($low <= $high){
+            //取得数组的中间键值
+            $mid = intval(($low+$high)/2);
+            if($arr[$mid]==$search){
+                return $mid; break;
+            }elseif($arr[$mid] > $search){
+                $high = $mid -1;
+            }elseif($arr[$mid] < $search){
+                $low = $mid+1;
+            }
+        }
+
+        if(abs($arr[$high] - $search) < abs($arr[$mid] - $search) ){//最大值与查找相值差的绝对值小于中间值与查找值的绝对值
+            return $high;
+        }else{
+            return $mid;
+        }
+        return false;
+    }
+
+    /**
+     * @name 生成二叉树
+     * @param $array
+     * @param $pid
+     * @return array|string
+     */
+    public function buildTree($array ,$pid)
+    {
+        $newArr = '';
+        foreach($array as $key=>$row)
+        {
+            if($row['parent_id'] == $pid){
+                $row['parent_id'] = $this->buildTree($array ,$row['id']);
+                $newArr[] = $row;
+            }
+        }
+        return $newArr;
+    }
+
+    /**
+     * @name 构建二叉树数据结构
+     */
+    public function getTree()
+    {
+        global $argv;
+        $pid = $argv[2];
+        $k = 7;
+        $id = 0;
+        for($i=65;$i<=90;$i++){
+            $name = '';
+            $parentId = 0;
+            for($j=0;$j<$k;$j++){
+                $name .=chr($i);
+                $temp['id'] = ++$id;
+                $temp['parent_id'] = ($j==0 && $i>65) ? $parentId : $temp['id']-1;
+                $temp['name'] = $name;
+                $array[] = $temp;
+            }
+        }
+        $result = $this->buildTree($array ,$pid);
+        print_r($result);
     }
 
 }
